@@ -10,7 +10,7 @@ workflows:
         distribution_type: app-store
         bundle_identifier: com.tripgenie.app
       xcode: latest
-      node: v18
+      node: latest
       cocoapods: default
     scripts:
       - name: Install dependencies
@@ -20,30 +20,17 @@ workflows:
         script: |
           cd ios
           pod install
-          cd ..
-      - name: Set up keychain to be used for codesigning
-        script: |
-          keychain initialize
-      - name: Set up provisioning profiles
-        script: |
-          app-store-connect fetch-signing-files \
-            $(xcode-project detect-bundle-id) \
-            --type IOS_APP_STORE \
-            --create
       - name: Build iOS
         script: |
-          xcode-project use-profiles
-          xcode-project build-ipa \
-            --workspace "ios/tripgenie.xcworkspace" \
-            --scheme "tripgenie"
+          xcodebuild build-for-distribution \
+            -workspace ios/tripgenie.xcworkspace \
+            -scheme tripgenie \
+            -configuration Release \
+            -archivePath build/tripgenie.xcarchive \
+            -allowProvisioningUpdates
     artifacts:
-      - build/ios/ipa/*.ipa
-      - /tmp/xcodebuild_logs/*.log
-      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
-      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+      - build/tripgenie.xcarchive
     publishing:
       email:
         recipients:
-          - your-email@example.com
-      app_store_connect:
-        submit_build: true 
+          - your-email@example.com 
